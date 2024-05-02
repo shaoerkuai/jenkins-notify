@@ -1,0 +1,29 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core"
+         xmlns:f="/lib/form"
+>
+    <div class="alert alert-info">
+        ${it.CurrentUser}请选择回填模式，如Job已被其他人人员配置回填项目和测试轮次，将展示为“项目已被 ??? 配置，如不修改请勿调整。”
+    </div>
+    <f:entry title="测试报告类型" field="typeReport"
+             description="不同类型测试框架产生不同测试报告，请选择对应的类型，否则无法正常解析执行结果。">
+        <f:radio name="useLanguage" title="JUnit" value="junit"/>
+        <f:radio name="useLanguage" title="TestNG" value="testng"/>
+        <f:radio name="useLanguage" title="Pytest" value="pytest"/>
+        <f:radio name="useLanguage" title="Allure" value="allure"/>
+        <f:radio name="useLanguage" title="Robot Framework" value="robot"/>
+
+    </f:entry>
+    <f:entry title="请选择测试平台项目">
+        <f:select field="TestProject"/>
+    </f:entry>
+    <f:entry title="请选择测试轮次">
+        <f:select field="TestCycle"/>
+    </f:entry>
+    <f:entry title="用例回填模式">
+        <f:select field="fillMode"/>
+    </f:entry>
+    <div class="jenkins-!-margin-1">
+        <f:checkbox title="${%回填时发送邮件}" field="hello"/>
+    </div>
+</j:jelly>
