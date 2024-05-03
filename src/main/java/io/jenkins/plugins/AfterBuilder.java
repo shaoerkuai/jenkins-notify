@@ -15,9 +15,7 @@ import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.bind.JavaScriptMethod;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Objects;import java.util.Optional;
+import java.util.*;
 
 /**
  * @author : JiaZe Xu
@@ -34,17 +32,17 @@ public class AfterBuilder extends Recorder {
     private String FillMode;
 
     public String getDefaultRecorder() {
-        return defaultRecorder;
+        return DefaultRecorder;
     }
 
-    private String defaultRecorder;
+    private String DefaultRecorder;
     private boolean SendMail;
 
     public boolean isSendDefaultMail() {
-        return sendDefaultMail;
+        return SendDefaultMail;
     }
 
-    private boolean sendDefaultMail;
+    private boolean SendDefaultMail;
 
     @DataBoundConstructor
     public AfterBuilder(String reportType,
@@ -59,8 +57,8 @@ public class AfterBuilder extends Recorder {
         this.TestCycle = testCycle;
         this.FillMode = fillMode;
         this.SendMail = sendMail;
-        this.defaultRecorder = defaultRecorder;
-        this.sendDefaultMail = sendDefaultMail;
+        this.DefaultRecorder = defaultRecorder;
+        this.SendDefaultMail = sendDefaultMail;
     }
 
     public String getTypeReport() {
@@ -136,14 +134,13 @@ public class AfterBuilder extends Recorder {
         }
 
         @JavaScriptMethod
-        public HashMap<String, String> fetchProjectId() {
-            HashMap<String,String> projectObj = new HashMap<>();
+        public LinkedHashMap<String, String> fetchProjectId() {
+            LinkedHashMap<String,String> projectObj = new LinkedHashMap<>();
             projectObj.put(getCurrentUser(),"nihao");
             projectObj.put("js请选择","empty");
             projectObj.put("js测试项目A","uuid1");
             projectObj.put("js测试项目B","uuid2");
             projectObj.put("js测试项目C","uuid3");
-            System.out.println("Inside fetchProjectId!!");
             return projectObj;
         }
 

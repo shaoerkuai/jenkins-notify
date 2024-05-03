@@ -9,7 +9,8 @@
     <st:bind var="backend" value="${descriptor}"/>
     <div class="alert alert-info">
         如回显的数据为UUID格式，代表系他人已填写，且当前人员无对应项目信息获取权限，请勿修改。
-        <br/>不同人员修改回填信息时，最好切换下测试项目和测试轮次后再进行保存。<b>如操作异常，请将执行报告发送给管理员手工处理。</b>
+        <br/>不同人员修改回填信息时，最好切换下测试项目和测试轮次后再进行保存。
+        <b>如操作异常，请将执行报告发送给管理员手工处理。</b>
     </div>
     <f:entry title="测试报告类型选择"
              field="reportEntry"
@@ -32,14 +33,21 @@
     <div class="jenkins-!-margin-1">
         <f:checkbox title="${%回填时发送邮件}" field="sendMail"/>
     </div>
-    <f:entry title="默认回填人（非用户触发构建时，以该人员身份进行回填，该人员必须要有对应项目权限）">
-        <f:textbox field="defaultRecorder"/>
+    <f:entry title="缺省回填设置" description="构建时，如非用户手动发起（定时任务、 Webhook 等无法获取 Build 发起人的场景），适用下列配置（确保该人员有上述测试项目权限）。">
+        <div class="dropdownList-container jenkins-!-margin-1">
+
+        <f:entry title="缺省回填人员名">
+            <f:textbox field="defaultRecorder"/>
+        </f:entry>
+
+            <f:checkbox title="${%触发缺省回填时，该人员接收流水线邮件}" field="sendDefaultMail"/>
+            <p style="color:var(--warning-color)">
+                <l:icon src="symbol-rss" class="icon-sm"/>
+                如需晾晒定时流水线数据，建议开启接收邮件；其他场景建议关闭。
+            </p>
+        </div>
     </f:entry>
-    <div class="jenkins-!-margin-1">
-        <f:checkbox title="${%触发默认回填人回填时，是否发送邮件给该回填人}" field="sendDefaultMail"/>
-        <p class=".jenkins-!-warning-color"><l:icon src="symbol-rss" class="icon-sm" />
-            如需要统计定时构建的稳定性，建议开启，否则建议不开启。用户手动触发的任务，该人员不会收到通知。</p>
-    </div>
+
     <script>
         function getExistedValueKey(val, d) {
             // 判断value是否在d内
@@ -51,9 +59,9 @@
             return null
         }
 
-        function checkAlreadyHasData(selector){
-            let ele =  document.querySelector(selector);
-            let childCount =ele["childElementCount"];
+        function checkAlreadyHasData(selector) {
+            let ele = document.querySelector(selector);
+            let childCount = ele["childElementCount"];
             return childCount > 0
         }
 
@@ -64,19 +72,19 @@
             return opt
         }
 
-        function modifyTestCycleOption(){
+        function modifyTestCycleOption() {
             // 更换人员信息时，重置Select
             let testCycle = document.querySelector("#testcycle")
-            let selectValue =  document.querySelector("#testcycle").getAttribute('value');
-            let subEle =  document.querySelector("#testcycle").querySelectorAll('option');
+            let selectValue = document.querySelector("#testcycle").getAttribute('value');
+            let subEle = document.querySelector("#testcycle").querySelectorAll('option');
             let matched = false;
             for (const key of subEle.keys()) {
-                if (subEle[key].getAttribute('value') === selectValue){
+                if (subEle[key].getAttribute('value') === selectValue) {
                     matched = true
                     break
                 }
             }
-            if (!matched){
+            if (!matched) {
                 let unknownOption = document.createElement('option')
                 unknownOption.value = selectValue;
                 unknownOption.innerHTML = selectValue;
@@ -89,9 +97,9 @@
             testCycle.value = selectValue
         }
 
-        function setupData(){
+        function setupData() {
             backend.fetchProjectId(function (obj) {
-                if (checkAlreadyHasData('#testproj')){
+                if (checkAlreadyHasData('#testproj')) {
                     // 初始化过
                     return
                 }
@@ -106,17 +114,17 @@
                     let unknownOption = createOption(savedProjectId, savedProjectId); // unknown
                     testProjectHTMLElement.appendChild(unknownOption);
                     Object.keys(backendResp).forEach(function (e) {
-                        testProjectHTMLElement.appendChild(createOption(e,backendResp[e]));
+                        testProjectHTMLElement.appendChild(createOption(e, backendResp[e]));
                     })
-                }
-                else {
+                } else {
                     // 删除响应内已有的数据，添加到列表框第一个
-                    delete backendResp[projectName]
-                    let tmpOption = createOption(projectName, savedProjectId)
-                    testProjectHTMLElement.appendChild(tmpOption)
+                    // delete backendResp[projectName]
+                    // let tmpOption = createOption(projectName, savedProjectId)
+                    // testProjectHTMLElement.appendChild(tmpOption)
                     Object.keys(backendResp).forEach(function (e) {
-                        testProjectHTMLElement.appendChild(createOption(e,backendResp[e]));
+                        testProjectHTMLElement.appendChild(createOption(e, backendResp[e]));
                     })
+                    testProjectHTMLElement.value = savedProjectId
                 }
 
 
