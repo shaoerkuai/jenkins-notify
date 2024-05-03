@@ -17,7 +17,7 @@ import org.kohsuke.stapler.bind.JavaScriptMethod;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Optional;
+import java.util.Objects;import java.util.Optional;
 
 /**
  * @author : JiaZe Xu
@@ -84,6 +84,9 @@ public class AfterBuilder extends Recorder {
     }
 
     public String isReportCheck(String value) {
+        if (Objects.isNull(this.TypeReport)){
+            return "";
+        }
         return this.TypeReport.equalsIgnoreCase(value) ? "true" : "";
     }
 
@@ -182,7 +185,10 @@ public class AfterBuilder extends Recorder {
             }
             // TODO 从接口根据currentUser和PorjectItem获取项目
             // GET /open/jenkins/testCycles?userId=**&projectId=**
-            items.add(testProject, "11");
+//            items.add(testProject+"11", "11");
+            items.add(testProject+"22", "22");
+            items.add(testProject+"33", "33");
+
             return items;
         }
 

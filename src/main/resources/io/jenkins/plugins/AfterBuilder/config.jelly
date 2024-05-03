@@ -2,17 +2,18 @@
 <j:jelly xmlns:j="jelly:core"
          xmlns:f="/lib/form"
          xmlns:st="jelly:stapler"
+         xmlns:l="/lib/layout"
 >
     <st:bind var="it" value="${instance}">
     </st:bind>
     <st:bind var="backend" value="${descriptor}"/>
     <div class="alert alert-info">
-        如该Job配置过相关参数，请使用在相同项目内的人员进行参数编辑，防止出现数据隔离导致回填异常。
-        当前编辑人：${instance.getCurrentUser()}
+        如回显的数据为UUID格式，代表系他人已填写，且当前人员无对应项目信息获取权限，请勿修改。
+        <br/>不同人员修改回填信息时，最好切换下测试项目和测试轮次后再进行保存。<b>如操作异常，请将执行报告发送给管理员手工处理。</b>
     </div>
-    <f:entry title="测试报告类型"
+    <f:entry title="测试报告类型选择"
              field="reportEntry"
-             description="不同类型测试框架产生不同测试报告。请选择对应的类型，否则无法正常解析执行结果。不要修改对应框架的报告导出目录。">
+             description="请选择构建产生的报告对应的类型，否则无法正常解析执行结果（请参考本配置项右侧帮助信息）。不要修改对应框架的报告导出目录。">
         <f:radio name="reportType" title="JUnit" value="junit" checked="${instance.isReportCheck('junit')}"/>
         <f:radio name="reportType" title="TestNG" value="testng" checked="${instance.isReportCheck('testng')}"/>
         <f:radio name="reportType" title="Pytest" value="pytest" checked="${instance.isReportCheck('pytest')}"/>
@@ -36,7 +37,8 @@
     </f:entry>
     <div class="jenkins-!-margin-1">
         <f:checkbox title="${%触发默认回填人回填时，是否发送邮件给该回填人}" field="sendDefaultMail"/>
-        <p>如需要统计定时构建的稳定性，建议开启，否则建议不开启。用户手动触发的任务，该人员不会收到通知。</p>
+        <p class=".jenkins-!-warning-color"><l:icon src="symbol-rss" class="icon-sm" />
+            如需要统计定时构建的稳定性，建议开启，否则建议不开启。用户手动触发的任务，该人员不会收到通知。</p>
     </div>
     <script>
         function getExistedValueKey(val, d) {
@@ -50,7 +52,9 @@
         }
 
         function checkAlreadyHasData(selector){
-            return  document.querySelector(selector).childElementCount > 0
+            let ele =  document.querySelector(selector);
+            let childCount =ele["childElementCount"];
+            return childCount > 0
         }
 
         function createOption(name, value) {
@@ -60,12 +64,38 @@
             return opt
         }
 
+        function modifyTestCycleOption(){
+            // 更换人员信息时，重置Select
+            let testCycle = document.querySelector("#testcycle")
+            let selectValue =  document.querySelector("#testcycle").getAttribute('value');
+            let subEle =  document.querySelector("#testcycle").querySelectorAll('option');
+            let matched = false;
+            for (const key of subEle.keys()) {
+                if (subEle[key].getAttribute('value') === selectValue){
+                    matched = true
+                    break
+                }
+            }
+            if (!matched){
+                let unknownOption = document.createElement('option')
+                unknownOption.value = selectValue;
+                unknownOption.innerHTML = selectValue;
+                testCycle.innerHTML = null;
+                testCycle.appendChild(unknownOption)
+                for (const entry of subEle.entries()) {
+                    testCycle.append(entry[1])
+                }
+            }
+            testCycle.value = selectValue
+        }
+
         function setupData(){
             backend.fetchProjectId(function (obj) {
                 if (checkAlreadyHasData('#testproj')){
                     // 初始化过
                     return
                 }
+                modifyTestCycleOption()
                 let testProjectHTMLElement = document.querySelector("#testproj");
                 let savedProjectId = testProjectHTMLElement.getAttribute("value"); // 控件已保存的数据
                 let backendResp = obj.responseObject();
@@ -97,7 +127,7 @@
             // 重新添加控件不会重新触发
             setTimeout(() => {
                 setupData()
-            }, 1000)
+            }, 500)
 
         });
     </script>
