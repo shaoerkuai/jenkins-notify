@@ -3,10 +3,7 @@ package io.jenkins.plugins;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.Launcher;
-import hudson.model.AbstractBuild;
-import hudson.model.AbstractProject;
-import hudson.model.BuildListener;
-import hudson.model.User;
+import hudson.model.*;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
@@ -15,8 +12,11 @@ import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.bind.JavaScriptMethod;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -32,15 +32,35 @@ public class AfterBuilder extends Recorder {
     private String TestCycle;
 
     private String FillMode;
+
+    public String getDefaultRecorder() {
+        return defaultRecorder;
+    }
+
+    private String defaultRecorder;
     private boolean SendMail;
 
+    public boolean isSendDefaultMail() {
+        return sendDefaultMail;
+    }
+
+    private boolean sendDefaultMail;
+
     @DataBoundConstructor
-    public AfterBuilder(String reportType, String testProject, String testCycle, String fillMode, boolean sendMail) {
+    public AfterBuilder(String reportType,
+                        String testProject,
+                        String testCycle,
+                        String fillMode,
+                        boolean sendMail,
+                        boolean sendDefaultMail,
+                        String defaultRecorder) {
         this.TypeReport = reportType;
         this.TestProject = testProject;
         this.TestCycle = testCycle;
         this.FillMode = fillMode;
         this.SendMail = sendMail;
+        this.defaultRecorder = defaultRecorder;
+        this.sendDefaultMail = sendDefaultMail;
     }
 
     public String getTypeReport() {
@@ -83,14 +103,45 @@ public class AfterBuilder extends Recorder {
 
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
-        return super.perform(build, launcher, listener);
+        List<Cause> causes = build.getCauses();
+        // 获取build的causes
+        String usernameBuildCause = "unknown";
+        for (Cause cause : causes) {
+            if (cause instanceof Cause.UserIdCause) {
+                // 当用户发起时，记录发起人
+                Cause.UserIdCause userIdCause = (Cause.UserIdCause) cause;
+                usernameBuildCause = userIdCause.getUserName();
+                break;
+            }
+        }
+        // 以该人员身份回填
+        listener.getLogger().println("******Start upload test report result to cloud******");
+        listener.getLogger().println("Build Cause: " + usernameBuildCause);
+        listener.getLogger().printf("Test Project Id: %s%n", this.TestProject);
+        listener.getLogger().printf("Test Cycle Id: %s%n", this.TestProject);
+        listener.getLogger().printf("Test Project: %s%n", this.TestProject);
+        listener.getLogger().printf("Send Email?: %s%n", this.SendMail);
+        return true;
     }
 
 
     @Extension
     public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
+
         public DescriptorImpl() {
             load();
+        }
+
+        @JavaScriptMethod
+        public HashMap<String, String> fetchProjectId() {
+            HashMap<String,String> projectObj = new HashMap<>();
+            projectObj.put(getCurrentUser(),"nihao");
+            projectObj.put("js请选择","empty");
+            projectObj.put("js测试项目A","uuid1");
+            projectObj.put("js测试项目B","uuid2");
+            projectObj.put("js测试项目C","uuid3");
+            System.out.println("Inside fetchProjectId!!");
+            return projectObj;
         }
 
         public String getCurrentUser() {
@@ -109,10 +160,8 @@ public class AfterBuilder extends Recorder {
 
         public ListBoxModel doFillTestProjectItems() {
             ListBoxModel items = new ListBoxModel();
-            items.add(getCurrentUser(),"anonymous");
-            items.add("==请选择==", "empty");
-            items.add("测试项目A", "uuid1");
-            items.add("测试项目B", "uuid2");
+            // TODO 从接口根据currentUser添加项目
+            // GET /open/jenkins/testProjects?userId=
             return items;
         }
 
@@ -131,6 +180,8 @@ public class AfterBuilder extends Recorder {
             if ("empty".equals(testProject)) {
                 return items;
             }
+            // TODO 从接口根据currentUser和PorjectItem获取项目
+            // GET /open/jenkins/testCycles?userId=**&projectId=**
             items.add(testProject, "11");
             return items;
         }
@@ -138,12 +189,11 @@ public class AfterBuilder extends Recorder {
         @NonNull
         @Override
         public String getDisplayName() {
-            return "TODO DISPLAY NAME";
+            return "DEMO PLUGIN";
         }
 
         @Override
         public boolean configure(StaplerRequest req, JSONObject formData) throws FormException {
-            System.out.println(formData);
             req.bindJSON(this, formData);
             save();
             return super.configure(req, formData);

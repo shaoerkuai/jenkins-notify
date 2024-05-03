@@ -1,10 +1,14 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core"
          xmlns:f="/lib/form"
+         xmlns:st="jelly:stapler"
 >
+    <st:bind var="it" value="${instance}">
+    </st:bind>
+    <st:bind var="backend" value="${descriptor}"/>
     <div class="alert alert-info">
         如该Job配置过相关参数，请使用在相同项目内的人员进行参数编辑，防止出现数据隔离导致回填异常。
-        ${instance.getCurrentUser()}
+        当前编辑人：${instance.getCurrentUser()}
     </div>
     <f:entry title="测试报告类型"
              field="reportEntry"
@@ -16,10 +20,10 @@
         <f:radio name="reportType" title="Robot Framework" value="robot" checked="${instance.isReportCheck('robot')}"/>
     </f:entry>
     <f:entry title="请选择测试平台项目">
-        <f:select field="testProject"/>
+        <f:select id="testproj" field="testProject" onfocus="setupData()"/>
     </f:entry>
     <f:entry title="请选择测试轮次">
-        <f:select field="testCycle"/>
+        <f:select id="testcycle" field="testCycle"/>
     </f:entry>
     <f:entry title="用例回填模式">
         <f:select field="fillMode"/>
@@ -27,4 +31,74 @@
     <div class="jenkins-!-margin-1">
         <f:checkbox title="${%回填时发送邮件}" field="sendMail"/>
     </div>
+    <f:entry title="默认回填人（非用户触发构建时，以该人员身份进行回填，该人员必须要有对应项目权限）">
+        <f:textbox field="defaultRecorder"/>
+    </f:entry>
+    <div class="jenkins-!-margin-1">
+        <f:checkbox title="${%触发默认回填人回填时，是否发送邮件给该回填人}" field="sendDefaultMail"/>
+        <p>如需要统计定时构建的稳定性，建议开启，否则建议不开启。用户手动触发的任务，该人员不会收到通知。</p>
+    </div>
+    <script>
+        function getExistedValueKey(val, d) {
+            // 判断value是否在d内
+            for (let key in d) {
+                if (d[key] === val) {
+                    return key
+                }
+            }
+            return null
+        }
+
+        function checkAlreadyHasData(selector){
+            return  document.querySelector(selector).childElementCount > 0
+        }
+
+        function createOption(name, value) {
+            let opt = document.createElement('option');
+            opt.innerHTML = name;
+            opt.value = value;
+            return opt
+        }
+
+        function setupData(){
+            backend.fetchProjectId(function (obj) {
+                if (checkAlreadyHasData('#testproj')){
+                    // 初始化过
+                    return
+                }
+                let testProjectHTMLElement = document.querySelector("#testproj");
+                let savedProjectId = testProjectHTMLElement.getAttribute("value"); // 控件已保存的数据
+                let backendResp = obj.responseObject();
+                testProjectHTMLElement.innerHTML = null;
+                let projectName = getExistedValueKey(savedProjectId, backendResp);
+                if (projectName === null) {
+                    // 已保存的数据不在获取到的测试项目列表内
+                    let unknownOption = createOption(savedProjectId, savedProjectId); // unknown
+                    testProjectHTMLElement.appendChild(unknownOption);
+                    Object.keys(backendResp).forEach(function (e) {
+                        testProjectHTMLElement.appendChild(createOption(e,backendResp[e]));
+                    })
+                }
+                else {
+                    // 删除响应内已有的数据，添加到列表框第一个
+                    delete backendResp[projectName]
+                    let tmpOption = createOption(projectName, savedProjectId)
+                    testProjectHTMLElement.appendChild(tmpOption)
+                    Object.keys(backendResp).forEach(function (e) {
+                        testProjectHTMLElement.appendChild(createOption(e,backendResp[e]));
+                    })
+                }
+
+
+            })
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            // 重新添加控件不会重新触发
+            setTimeout(() => {
+                setupData()
+            }, 1000)
+
+        });
+    </script>
 </j:jelly>
