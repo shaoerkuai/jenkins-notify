@@ -3,27 +3,28 @@
          xmlns:f="/lib/form"
 >
     <div class="alert alert-info">
-        ${it.CurrentUser}请选择回填模式，如Job已被其他人人员配置回填项目和测试轮次，将展示为“项目已被 ??? 配置，如不修改请勿调整。”
+        如该Job配置过相关参数，请使用在相同项目内的人员进行参数编辑，防止出现数据隔离导致回填异常。
+        ${instance.getCurrentUser()}
     </div>
-    <f:entry title="测试报告类型" field="typeReport"
-             description="不同类型测试框架产生不同测试报告，请选择对应的类型，否则无法正常解析执行结果。">
-        <f:radio name="useLanguage" title="JUnit" value="junit"/>
-        <f:radio name="useLanguage" title="TestNG" value="testng"/>
-        <f:radio name="useLanguage" title="Pytest" value="pytest"/>
-        <f:radio name="useLanguage" title="Allure" value="allure"/>
-        <f:radio name="useLanguage" title="Robot Framework" value="robot"/>
-
+    <f:entry title="测试报告类型"
+             field="reportEntry"
+             description="不同类型测试框架产生不同测试报告。请选择对应的类型，否则无法正常解析执行结果。不要修改对应框架的报告导出目录。">
+        <f:radio name="reportType" title="JUnit" value="junit" checked="${instance.isReportCheck('junit')}"/>
+        <f:radio name="reportType" title="TestNG" value="testng" checked="${instance.isReportCheck('testng')}"/>
+        <f:radio name="reportType" title="Pytest" value="pytest" checked="${instance.isReportCheck('pytest')}"/>
+        <f:radio name="reportType" title="Allure" value="allure" checked="${instance.isReportCheck('allure')}"/>
+        <f:radio name="reportType" title="Robot Framework" value="robot" checked="${instance.isReportCheck('robot')}"/>
     </f:entry>
     <f:entry title="请选择测试平台项目">
-        <f:select field="TestProject"/>
+        <f:select field="testProject"/>
     </f:entry>
     <f:entry title="请选择测试轮次">
-        <f:select field="TestCycle"/>
+        <f:select field="testCycle"/>
     </f:entry>
     <f:entry title="用例回填模式">
         <f:select field="fillMode"/>
     </f:entry>
     <div class="jenkins-!-margin-1">
-        <f:checkbox title="${%回填时发送邮件}" field="hello"/>
+        <f:checkbox title="${%回填时发送邮件}" field="sendMail"/>
     </div>
 </j:jelly>
