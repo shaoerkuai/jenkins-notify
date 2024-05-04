@@ -14,20 +14,20 @@
     </div>
     <f:entry title="测试报告类型选择"
              field="reportEntry"
-             description="请选择构建产生的报告对应的类型，否则无法正常解析执行结果（请参考本配置项右侧帮助信息）。不要修改对应框架的报告导出目录。">
+             description="请参考本配置项提示，进行测试报告的导出配置，否则无法正确拉取到测试结果。">
         <f:radio name="reportType" title="JUnit" value="junit" checked="${instance.isReportCheck('junit')}"/>
         <f:radio name="reportType" title="TestNG" value="testng" checked="${instance.isReportCheck('testng')}"/>
         <f:radio name="reportType" title="Pytest" value="pytest" checked="${instance.isReportCheck('pytest')}"/>
         <f:radio name="reportType" title="Allure" value="allure" checked="${instance.isReportCheck('allure')}"/>
         <f:radio name="reportType" title="Robot Framework" value="robot" checked="${instance.isReportCheck('robot')}"/>
     </f:entry>
-    <f:entry title="请选择测试平台项目">
+    <f:entry title="请选择测试平台项目" field="selectTestProject">
         <f:select id="testproj" field="testProject" onfocus="setupData()"/>
     </f:entry>
-    <f:entry title="请选择测试轮次">
+    <f:entry title="请选择测试轮次" field="selectTestCycle">
         <f:select id="testcycle" field="testCycle"/>
     </f:entry>
-    <f:entry title="用例回填模式">
+    <f:entry title="用例回填模式" field="selectFillMode">
         <f:select field="fillMode"/>
     </f:entry>
     <div class="jenkins-!-margin-1">

@@ -23,26 +23,19 @@ import java.util.*;
  */
 public class AfterBuilder extends Recorder {
 
-    private String TypeReport;
+    private final String TypeReport;
 
-    private String TestProject;
+    private final String TestProject;
 
-    private String TestCycle;
+    private final String TestCycle;
 
-    private String FillMode;
+    private final String FillMode;
 
-    public String getDefaultRecorder() {
-        return DefaultRecorder;
-    }
+    private final String DefaultRecorder;
 
-    private String DefaultRecorder;
-    private boolean SendMail;
+    private final boolean SendMail;
 
-    public boolean isSendDefaultMail() {
-        return SendDefaultMail;
-    }
-
-    private boolean SendDefaultMail;
+    private final boolean SendDefaultMail;
 
     @DataBoundConstructor
     public AfterBuilder(String reportType,
@@ -81,15 +74,23 @@ public class AfterBuilder extends Recorder {
         return SendMail;
     }
 
+    public String getDefaultRecorder() {
+        return DefaultRecorder;
+    }
+
+    public boolean getSendDefaultMail() {
+        return SendDefaultMail;
+    }
+
     public String isReportCheck(String value) {
-        if (Objects.isNull(this.TypeReport)){
+        if (Objects.isNull(this.TypeReport)) {
             return "";
         }
         return this.TypeReport.equalsIgnoreCase(value) ? "true" : "";
     }
 
     public String getCurrentUser() {
-        Optional<User> currentUser = Optional.ofNullable(User.current());
+        var currentUser = Optional.ofNullable(User.current());
         if (currentUser.isPresent()) {
             return currentUser.get().getId();
         } else {
@@ -104,24 +105,26 @@ public class AfterBuilder extends Recorder {
 
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
-        List<Cause> causes = build.getCauses();
+        var logger = listener.getLogger();
+        var causes = build.getCauses();
         // 获取build的causes
-        String usernameBuildCause = "unknown";
+        var usernameBuildCause = "unknown";
         for (Cause cause : causes) {
             if (cause instanceof Cause.UserIdCause) {
                 // 当用户发起时，记录发起人
-                Cause.UserIdCause userIdCause = (Cause.UserIdCause) cause;
+                var userIdCause = (Cause.UserIdCause) cause;
                 usernameBuildCause = userIdCause.getUserName();
                 break;
             }
         }
         // 以该人员身份回填
-        listener.getLogger().println("******Start upload test report result to cloud******");
-        listener.getLogger().println("Build Cause: " + usernameBuildCause);
-        listener.getLogger().printf("Test Project Id: %s%n", this.TestProject);
-        listener.getLogger().printf("Test Cycle Id: %s%n", this.TestProject);
-        listener.getLogger().printf("Test Project: %s%n", this.TestProject);
-        listener.getLogger().printf("Send Email?: %s%n", this.SendMail);
+        logger.println("******Start upload test report result to cloud******");
+        logger.println("Build Cause: " + usernameBuildCause);
+        logger.println("Build Status: " + build.getResult());
+        logger.printf("Test Project Id: %s%n", this.TestProject);
+        logger.printf("Test Cycle Id: %s%n", this.TestProject);
+        logger.printf("Test Project: %s%n", this.TestProject);
+        logger.printf("Send Email?: %s%n", this.SendMail);
         return true;
     }
 
@@ -135,12 +138,12 @@ public class AfterBuilder extends Recorder {
 
         @JavaScriptMethod
         public LinkedHashMap<String, String> fetchProjectId() {
-            LinkedHashMap<String,String> projectObj = new LinkedHashMap<>();
-            projectObj.put(getCurrentUser(),"nihao");
-            projectObj.put("js请选择","empty");
-            projectObj.put("js测试项目A","uuid1");
-            projectObj.put("js测试项目B","uuid2");
-            projectObj.put("js测试项目C","uuid3");
+            LinkedHashMap<String, String> projectObj = new LinkedHashMap<>();
+            projectObj.put(getCurrentUser(), "nihao");
+            projectObj.put("js请选择", "empty");
+            projectObj.put("js测试项目A", "uuid1");
+            projectObj.put("js测试项目B", "uuid2");
+            projectObj.put("js测试项目C", "uuid3");
             return projectObj;
         }
 
@@ -159,10 +162,9 @@ public class AfterBuilder extends Recorder {
         }
 
         public ListBoxModel doFillTestProjectItems() {
-            ListBoxModel items = new ListBoxModel();
             // TODO 从接口根据currentUser添加项目
             // GET /open/jenkins/testProjects?userId=
-            return items;
+            return new ListBoxModel();
         }
 
         public ListBoxModel doFillFillModeItems() {
@@ -183,9 +185,8 @@ public class AfterBuilder extends Recorder {
             // TODO 从接口根据currentUser和PorjectItem获取项目
             // GET /open/jenkins/testCycles?userId=**&projectId=**
 //            items.add(testProject+"11", "11");
-            items.add(testProject+"22", "22");
-            items.add(testProject+"33", "33");
-
+            items.add(testProject + "——22", "22");
+            items.add(testProject + "——33", "33");
             return items;
         }
 
