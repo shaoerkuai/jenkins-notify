@@ -13,9 +13,14 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.bind.JavaScriptMethod;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 
 /**
  * @author : JiaZe Xu
@@ -23,6 +28,7 @@ import java.util.*;
  */
 public class AfterBuilder extends Recorder {
 
+    private static final Logger log = LoggerFactory.getLogger(AfterBuilder.class);
     private final String TypeReport;
 
     private final String TestProject;
@@ -107,6 +113,8 @@ public class AfterBuilder extends Recorder {
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
         var logger = listener.getLogger();
         var causes = build.getCauses();
+        var build_number = build.getEnvironment(listener).get("BUILD_NUMBER");
+        var workspacePath = Objects.requireNonNull(build.getWorkspace()).toURI();
         // 获取build的causes
         var usernameBuildCause = "unknown";
         for (Cause cause : causes) {
@@ -119,10 +127,12 @@ public class AfterBuilder extends Recorder {
         }
         // 以该人员身份回填
         logger.println("******Start upload test report result to cloud******");
+        logger.println("Workspace Path: " + workspacePath.getPath());
+        logger.println("Build Number:" + build_number);
         logger.println("Build Cause: " + usernameBuildCause);
         logger.println("Build Status: " + build.getResult());
         logger.printf("Test Project Id: %s%n", this.TestProject);
-        logger.printf("Test Cycle Id: %s%n", this.TestProject);
+        logger.printf("Test Cycle Id: %s%n", this.TestCycle);
         logger.printf("Test Project: %s%n", this.TestProject);
         logger.printf("Send Email?: %s%n", this.SendMail);
         return true;
